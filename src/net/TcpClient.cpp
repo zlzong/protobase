@@ -11,8 +11,7 @@ namespace detail {
 }
 
 TcpClient::TcpClient(EventLoop *eventLoop, const InetAddress &serverAddr, const std::string &name)
-        : Connector(eventLoop, serverAddr), m_eventLoop(eventLoop), m_name(name), m_connectionCallback(),
-          m_closeCallback(), m_messageCallback(), m_retry(false), m_connect(false), m_nextConnId(1) {
+        : Connector(eventLoop, serverAddr), m_eventLoop(eventLoop), m_name(name), m_retry(false), m_connect(false), m_nextConnId(1) {
     setNewConnectionCallback(std::bind(&TcpClient::newConnection, this, std::placeholders::_1));
 }
 
@@ -61,12 +60,12 @@ void TcpClient::clientStop() {
 void TcpClient::newConnection(int sockFd) {
     LOG_INFO("new connection arrive: sockFd is: {}", sockFd);
     sockaddr_in peer;
-    socklen_t peerAddrLen = static_cast<socklen_t>(sizeof(peer));
+    socklen_t peerAddrLen = sizeof(peer);
     ::getpeername(sockFd, (sockaddr *) &peer, &peerAddrLen);
     InetAddress peerAddr(peer);
 
     sockaddr_in local;
-    socklen_t localAddrLen = static_cast<socklen_t>(sizeof(local));
+    socklen_t localAddrLen = sizeof(local);
     ::getsockname(sockFd, (sockaddr *) &local, &localAddrLen);
     InetAddress localAddr(peer);
 

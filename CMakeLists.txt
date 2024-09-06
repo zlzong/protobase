@@ -20,7 +20,6 @@ if (CMAKE_CXX_COMPILER_VERSION VERSION_GREATER 7.2.9)
 endif ()
 
 include_directories(${THIRD_PARTY_DIR}/inc)
-#link_directories(${THIRD_PARTY_DIR}/lib)
 
 include_directories(src)
 add_subdirectory(src)
