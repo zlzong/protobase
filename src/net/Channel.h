@@ -111,7 +111,7 @@ public:
         m_status = status;
     }
 
-    EventLoop *ownerLoop() {
+    EventLoop *ownerLoop() const {
         return m_eventLoop;
     }
 

@@ -11,7 +11,7 @@ namespace detail {
 }
 
 TcpClient::TcpClient(EventLoop *eventLoop, const InetAddress &serverAddr, const std::string &name)
-        : Connector(eventLoop, serverAddr), m_eventLoop(eventLoop), m_name(name), m_retry(false), m_connect(false), m_nextConnId(1) {
+        : Connector(eventLoop, serverAddr), m_name(name), m_retry(false), m_connect(false), m_nextConnId(1) {
     setNewConnectionCallback(std::bind(&TcpClient::newConnection, this, std::placeholders::_1));
 }
 
@@ -26,8 +26,9 @@ TcpClient::~TcpClient() {
     }
 
     if (conn) {
-        CloseCallback cb = std::bind(&detail::removeConnection, m_eventLoop, std::placeholders::_1);
-        m_eventLoop->runInLoop(std::bind(&Connection::setCloseCallback, conn, cb));
+        auto loop = ownerLoop();
+        CloseCallback cb = std::bind(&detail::removeConnection, loop, std::placeholders::_1);
+        loop->runInLoop(std::bind(&Connection::setCloseCallback, conn, cb));
         if (unique) {
             conn->forceClose();
         }
@@ -74,7 +75,7 @@ void TcpClient::newConnection(int sockFd) {
     m_nextConnId++;
     std::string connName = m_name + buf;
 
-    ConnectionPtr conn(new Connection(m_eventLoop, connName, sockFd, localAddr, peerAddr));
+    ConnectionPtr conn(new Connection(ownerLoop(), connName, sockFd, localAddr, peerAddr));
     conn->setConnectionCallback(m_connectionCallback);
     conn->setMessageCallback(m_messageCallback);
     conn->setWriteCompleteCallback(m_writeCompleteCallback);
@@ -94,7 +95,7 @@ void TcpClient::removeConnection(const ConnectionPtr &conn) {
         m_connectionPtr.reset();
     }
 
-    m_eventLoop->queueInLoop(std::bind(&Connection::onConnectionDestroy, conn));
+    ownerLoop()->queueInLoop(std::bind(&Connection::onConnectionDestroy, conn));
     if (m_closeCallback) {
         m_closeCallback(conn);
     }

@@ -19,7 +19,7 @@ public:
 
     ConnectionPtr connection() const { return m_connectionPtr; }
 
-    EventLoop *getLoop() const { return m_eventLoop; }
+    EventLoop *getLoop() const { return ownerLoop(); }
 
     bool retry() const { return m_retry; }
 
@@ -41,7 +41,6 @@ private:
     void removeConnection(const ConnectionPtr &conn);
 
 private:
-    EventLoop *m_eventLoop;
     ConnectionPtr m_connectionPtr;
     const std::string m_name;
     ConnectionCallback m_connectionCallback;
