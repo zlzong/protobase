@@ -39,10 +39,10 @@ EventLoop::EventLoop()
           m_quit(false),
           m_threadId(CurrentThread::currentTid()),
           m_poller(Poller::newDefaultPoller(this)),
-          m_wakeFd(createEventFd()),
-          m_timerFd(createTimerFd()),
-          m_wakeUpChannel(new Channel(this, m_wakeFd)),
-          m_timerChannel(new Channel(this, m_timerFd)),
+//          m_wakeFd(createEventFd()),
+//          m_timerFd(createTimerFd()),
+          m_wakeUpChannel(new Channel(this, createEventFd())),
+          m_timerChannel(new Channel(this, createTimerFd())),
           m_callingPendingFunctors(false) {
     if (t_eventLoopInThisThread) {
         LOG_ERROR("another eventLoop: {} exist in this thread:{}", fmt::ptr(t_eventLoopInThisThread), m_threadId);
@@ -63,10 +63,10 @@ EventLoop::EventLoop(std::string &name)
           m_quit(false),
           m_threadId(CurrentThread::currentTid()),
           m_poller(Poller::newDefaultPoller(this)),
-          m_wakeFd(createEventFd()),
-          m_timerFd(createTimerFd()),
-          m_wakeUpChannel(new Channel(this, m_wakeFd)),
-          m_timerChannel(new Channel(this, m_timerFd)),
+//          m_wakeFd(createEventFd()),
+//          m_timerFd(createTimerFd()),
+          m_wakeUpChannel(new Channel(this, createEventFd())),
+          m_timerChannel(new Channel(this, createTimerFd())),
           m_callingPendingFunctors(false),
           m_name(std::move(name)) {
     if (t_eventLoopInThisThread) {
@@ -86,13 +86,13 @@ EventLoop::EventLoop(std::string &name)
 EventLoop::~EventLoop() {
     m_wakeUpChannel->disableAll();
     m_wakeUpChannel->remove();
-    close(m_wakeFd);
+//    close(m_wakeFd);
     t_eventLoopInThisThread = nullptr;
 }
 
 void EventLoop::readEventFd() const {
-    uint64_t one = 1;
-    ssize_t nRead = read(m_wakeFd, &one, sizeof(one));
+    uint64_t one;
+    ssize_t nRead = read(m_wakeUpChannel->fd(), &one, sizeof(one));
     if (nRead != sizeof(one)) {
         LOG_ERROR("read wake up fd nRead :{} is not equal to 8", nRead);
     }
@@ -100,9 +100,9 @@ void EventLoop::readEventFd() const {
 
 void EventLoop::readTimerFd() {
     uint64_t one;
-    ssize_t nRead = read(m_timerFd, &one, sizeof(one));
+    ssize_t nRead = read(m_timerChannel->fd(), &one, sizeof(one));
     if (nRead != sizeof(one)) {
-        LOG_ERROR("read wake up fd nRead :{} is not equal to 8", nRead);
+        LOG_ERROR("read timer fd nRead :{} is not equal to 8, errno: {}", nRead, errno);
     }
 
     m_timerWheel.onTime(Timestamp::now().microSecondsSinceEpoch());
@@ -159,7 +159,7 @@ void EventLoop::queueInLoop(EventLoop::Functor cb) {
 
 void EventLoop::wakeup() {
     uint64_t one = 1;
-    ssize_t nWrite = write(m_wakeFd, &one, sizeof(one));
+    ssize_t nWrite = write(m_wakeUpChannel->fd(), &one, sizeof(one));
     if (nWrite != sizeof(one)) {
         LOG_ERROR("eventLoop wakeup error,excepted write size is {},actually write size is :{}", sizeof one, nWrite);
     }

@@ -1,6 +1,5 @@
 #include "Thread.h"
 #include "CurrentThread.h"
-#include "Logger.h"
 
 #include <utility>
 #include <semaphore.h>
@@ -15,7 +14,6 @@ Thread::Thread(Thread::ThreadFunc threadFunc, std::string name)
 }
 
 Thread::~Thread() {
-    LOG_INFO("thread: {} disposed",m_name.c_str());
     if (m_started && !m_joined) {
         m_thread->detach();
     }
