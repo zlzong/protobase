@@ -112,13 +112,13 @@ void Connector::connecting(int sockFd) {
     setState(kConnecting);
 
     setFd(sockFd);
-    setWriteCallback(std::bind(&Connector::handleWrite, this));
-    setErrorCallback(std::bind(&Connector::handleError, this));
+    setWriteCallback(std::bind(&Connector::onWrite, this));
+    setErrorCallback(std::bind(&Connector::onError, this, std::placeholders::_1));
     enableWriting();
     LOG_TRACE("connector state is:{}", static_cast<int>(m_state));
 }
 
-void Connector::handleWrite() {
+void Connector::onWrite() {
     LOG_TRACE("connector state is:{}", static_cast<int>(m_state));
     if (m_state == kConnecting) {
         int sockFd = removeChannel();
@@ -146,7 +146,7 @@ void Connector::handleWrite() {
     }
 }
 
-void Connector::handleError() {
+void Connector::onError(const std::string &errMsg) {
     if (m_state == kConnecting) {
         int sockFd = removeChannel();
         int err;

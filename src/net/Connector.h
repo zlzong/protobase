@@ -35,9 +35,9 @@ private:
 
     void connecting(int sockFd);
 
-    void handleWrite();
+    void onWrite() override;
 
-    void handleError();
+    void onError(const std::string &errMsg) override;
 
     void retry(int sockFd);
 
