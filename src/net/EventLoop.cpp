@@ -39,8 +39,6 @@ EventLoop::EventLoop()
           m_quit(false),
           m_threadId(CurrentThread::currentTid()),
           m_poller(Poller::newDefaultPoller(this)),
-//          m_wakeFd(createEventFd()),
-//          m_timerFd(createTimerFd()),
           m_wakeUpChannel(new Channel(this, createEventFd())),
           m_timerChannel(new Channel(this, createTimerFd())),
           m_callingPendingFunctors(false) {
@@ -63,8 +61,6 @@ EventLoop::EventLoop(std::string &name)
           m_quit(false),
           m_threadId(CurrentThread::currentTid()),
           m_poller(Poller::newDefaultPoller(this)),
-//          m_wakeFd(createEventFd()),
-//          m_timerFd(createTimerFd()),
           m_wakeUpChannel(new Channel(this, createEventFd())),
           m_timerChannel(new Channel(this, createTimerFd())),
           m_callingPendingFunctors(false),
@@ -86,7 +82,6 @@ EventLoop::EventLoop(std::string &name)
 EventLoop::~EventLoop() {
     m_wakeUpChannel->disableAll();
     m_wakeUpChannel->remove();
-//    close(m_wakeFd);
     t_eventLoopInThisThread = nullptr;
 }
 

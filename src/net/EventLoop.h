@@ -72,8 +72,6 @@ private:
     Timestamp m_pollReturnTime;
     std::unique_ptr<Poller> m_poller;
     TimerWheel m_timerWheel;
-//    int m_wakeFd;
-//    int m_timerFd;
     std::unique_ptr<Channel> m_wakeUpChannel;
     std::unique_ptr<Channel> m_timerChannel;
     ChannelList m_activeChannels;
