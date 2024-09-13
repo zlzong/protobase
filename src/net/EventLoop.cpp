@@ -17,19 +17,22 @@ int createEventFd() {
     return eventFd;
 }
 
-int createTimerFd() {
+int createTimerFd(int64_t initialMs, int64_t intervalMs) {
     int timerFd = timerfd_create(CLOCK_MONOTONIC, EFD_NONBLOCK | EFD_CLOEXEC);
     if (timerFd < 0) {
         LOG_ERROR("create timer fd failed, errno: {}", errno);
         exit(-1);
     }
 
-    struct itimerspec its{};
-    its.it_interval.tv_sec = 1;
-    its.it_interval.tv_nsec = 0;
-    its.it_value = its.it_interval;
+    itimerspec new_value;
+    new_value.it_value.tv_sec = initialMs / 1000;
+    new_value.it_value.tv_nsec = (initialMs % 1000) * 1000000;
+    new_value.it_interval.tv_sec = intervalMs / 1000;
+    new_value.it_interval.tv_nsec = (intervalMs % 1000) * 1000000;
 
-    timerfd_settime(timerFd, 0, &its, nullptr);
+    if (timerfd_settime(timerFd, 0, &new_value, nullptr) == -1) {
+        LOG_ERROR("Failed to set timer, errno: {}", errno);
+    }
 
     return timerFd;
 }
@@ -40,7 +43,7 @@ EventLoop::EventLoop()
           m_threadId(CurrentThread::currentTid()),
           m_poller(Poller::newDefaultPoller(this)),
           m_wakeUpChannel(new Channel(this, createEventFd())),
-          m_timerChannel(new Channel(this, createTimerFd())),
+//          m_timerChannel(new Channel(this, createTimerFd())),
           m_callingPendingFunctors(false) {
     if (t_eventLoopInThisThread) {
         LOG_ERROR("another eventLoop: {} exist in this thread:{}", fmt::ptr(t_eventLoopInThisThread), m_threadId);
@@ -52,8 +55,8 @@ EventLoop::EventLoop()
     m_wakeUpChannel->setReadCallback(std::bind(&EventLoop::readEventFd, this));
     m_wakeUpChannel->enableReading();
 
-    m_timerChannel->setReadCallback(std::bind(&EventLoop::readTimerFd, this));
-    m_timerChannel->enableReading();
+//    m_timerChannel->setReadCallback(std::bind(&EventLoop::readTimerFd, this));
+//    m_timerChannel->enableReading();
 }
 
 EventLoop::EventLoop(std::string &name)
@@ -62,7 +65,7 @@ EventLoop::EventLoop(std::string &name)
           m_threadId(CurrentThread::currentTid()),
           m_poller(Poller::newDefaultPoller(this)),
           m_wakeUpChannel(new Channel(this, createEventFd())),
-          m_timerChannel(new Channel(this, createTimerFd())),
+//          m_timerChannel(new Channel(this, createTimerFd())),
           m_callingPendingFunctors(false),
           m_name(std::move(name)) {
     if (t_eventLoopInThisThread) {
@@ -75,8 +78,8 @@ EventLoop::EventLoop(std::string &name)
     m_wakeUpChannel->setReadCallback(std::bind(&EventLoop::readEventFd, this));
     m_wakeUpChannel->enableReading();
 
-    m_timerChannel->setReadCallback(std::bind(&EventLoop::readTimerFd, this));
-    m_timerChannel->enableReading();
+//    m_timerChannel->setReadCallback(std::bind(&EventLoop::readTimerFd, this));
+//    m_timerChannel->enableReading();
 }
 
 EventLoop::~EventLoop() {
