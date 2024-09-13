@@ -46,20 +46,18 @@ public:
 
     void runAt(Timestamp time, const TimerTask &task);
 
-    void runAfter(int delaySeconds, const TimerTask &task);
+    void runAfter(int delayMs, const TimerTask &task);
 
-    void runAfter(int delaySeconds, TimerTask &&task);
+    void runAfter(int delayMs, TimerTask &&task);
 
-    void runEvery(int intervalSeconds, const TimerTask &task);
+    void runEvery(int intervalMs, const TimerTask &task);
 
-    void runEvery(int intervalSeconds, TimerTask &&task);
+    void runEvery(int intervalMs, TimerTask &&task);
 
 //    void cancel(TimerId timerId);
 
 private:
     void readEventFd() const;
-
-    void readTimerFd() ;
 
     void doPendingFunctors();
 

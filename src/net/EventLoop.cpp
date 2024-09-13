@@ -43,7 +43,6 @@ EventLoop::EventLoop()
           m_threadId(CurrentThread::currentTid()),
           m_poller(Poller::newDefaultPoller(this)),
           m_wakeUpChannel(new Channel(this, createEventFd())),
-//          m_timerChannel(new Channel(this, createTimerFd())),
           m_callingPendingFunctors(false) {
     if (t_eventLoopInThisThread) {
         LOG_ERROR("another eventLoop: {} exist in this thread:{}", fmt::ptr(t_eventLoopInThisThread), m_threadId);
@@ -54,9 +53,6 @@ EventLoop::EventLoop()
 
     m_wakeUpChannel->setReadCallback(std::bind(&EventLoop::readEventFd, this));
     m_wakeUpChannel->enableReading();
-
-//    m_timerChannel->setReadCallback(std::bind(&EventLoop::readTimerFd, this));
-//    m_timerChannel->enableReading();
 }
 
 EventLoop::EventLoop(std::string &name)
@@ -65,7 +61,6 @@ EventLoop::EventLoop(std::string &name)
           m_threadId(CurrentThread::currentTid()),
           m_poller(Poller::newDefaultPoller(this)),
           m_wakeUpChannel(new Channel(this, createEventFd())),
-//          m_timerChannel(new Channel(this, createTimerFd())),
           m_callingPendingFunctors(false),
           m_name(std::move(name)) {
     if (t_eventLoopInThisThread) {
@@ -77,9 +72,6 @@ EventLoop::EventLoop(std::string &name)
 
     m_wakeUpChannel->setReadCallback(std::bind(&EventLoop::readEventFd, this));
     m_wakeUpChannel->enableReading();
-
-//    m_timerChannel->setReadCallback(std::bind(&EventLoop::readTimerFd, this));
-//    m_timerChannel->enableReading();
 }
 
 EventLoop::~EventLoop() {
@@ -94,16 +86,6 @@ void EventLoop::readEventFd() const {
     if (nRead != sizeof(one)) {
         LOG_ERROR("read wake up fd nRead :{} is not equal to 8", nRead);
     }
-}
-
-void EventLoop::readTimerFd() {
-    uint64_t one;
-    ssize_t nRead = read(m_timerChannel->fd(), &one, sizeof(one));
-    if (nRead != sizeof(one)) {
-        LOG_ERROR("read timer fd nRead :{} is not equal to 8, errno: {}", nRead, errno);
-    }
-
-    m_timerWheel.onTime(Timestamp::now().microSecondsSinceEpoch());
 }
 
 void EventLoop::loop() {
@@ -192,45 +174,83 @@ bool EventLoop::hasChannel(Channel *channel) {
 }
 
 void EventLoop::runAt(Timestamp time, const TimerTask &task) {
-
+    int64_t now = Timestamp::now().microSecondsSinceEpoch();
+    int64_t t = time.microSecondsSinceEpoch();
+    runAfter(t-now,task);
 }
 
-void EventLoop::runAfter(int delaySeconds, const TimerTask &task) {
-    if (inLoopThread()) {
-        m_timerWheel.runAfter(delaySeconds, task);
-    } else {
-        runInLoop([this, delaySeconds, task]() {
-            m_timerWheel.runAfter(delaySeconds, task);
-        });
-    }
+void EventLoop::runAfter(int delayMs, const TimerTask &task) {
+    int tfd = createTimerFd(delayMs, 0);
+    auto *pChannel = new Channel(this, tfd);
+    pChannel->setReadCallback([&](Timestamp timestamp) {
+        uint64_t one;
+        ssize_t nRead = read(tfd, &one, sizeof(one));
+        if (nRead != 8) {
+            LOG_ERROR("read timer fd nRead :{} is not equal to 8, errno: {}", nRead, errno);
+        }
+
+        if (inLoopThread()) {
+            task();
+        } else {
+            runInLoop(task);
+        }
+    });
+    pChannel->enableReading();
 }
 
-void EventLoop::runAfter(int delaySeconds, TimerTask &&task) {
-    if (inLoopThread()) {
-        m_timerWheel.runAfter(delaySeconds, task);
-    } else {
-        runInLoop([this, delaySeconds, task]() {
-            m_timerWheel.runAfter(delaySeconds, task);
-        });
-    }
+void EventLoop::runAfter(int delayMs, TimerTask &&task) {
+    int tfd = createTimerFd(delayMs, 0);
+    auto *pChannel = new Channel(this, tfd);
+    pChannel->setReadCallback([&](Timestamp timestamp) {
+        uint64_t one;
+        ssize_t nRead = read(tfd, &one, sizeof(one));
+        if (nRead != 8) {
+            LOG_ERROR("read timer fd nRead :{} is not equal to 8, errno: {}", nRead, errno);
+        }
+
+        if (inLoopThread()) {
+            task();
+        } else {
+            runInLoop(task);
+        }
+    });
+    pChannel->enableReading();
 }
 
-void EventLoop::runEvery(int intervalSeconds, const TimerTask &task) {
-    if (inLoopThread()) {
-        m_timerWheel.runEvery(intervalSeconds, task);
-    } else {
-        runInLoop([this, intervalSeconds, task]() {
-            m_timerWheel.runEvery(intervalSeconds, task);
-        });
-    }
+void EventLoop::runEvery(int delayMs, const TimerTask &task) {
+    int tfd = createTimerFd(delayMs, delayMs);
+    auto *pChannel = new Channel(this, tfd);
+    pChannel->setReadCallback([&](Timestamp timestamp) {
+        uint64_t one;
+        ssize_t nRead = read(tfd, &one, sizeof(one));
+        if (nRead != 8) {
+            LOG_ERROR("read timer fd nRead :{} is not equal to 8, errno: {}", nRead, errno);
+        }
+
+        if (inLoopThread()) {
+            task();
+        } else {
+            runInLoop(task);
+        }
+    });
+    pChannel->enableReading();
 }
 
-void EventLoop::runEvery(int intervalSeconds, TimerTask &&task) {
-    if (inLoopThread()) {
-        m_timerWheel.runEvery(intervalSeconds, task);
-    } else {
-        runInLoop([this, intervalSeconds, task]() {
-            m_timerWheel.runEvery(intervalSeconds, task);
-        });
-    }
+void EventLoop::runEvery(int delayMs, TimerTask &&task) {
+    int tfd = createTimerFd(delayMs, delayMs);
+    auto *pChannel = new Channel(this, tfd);
+    pChannel->setReadCallback([&](Timestamp timestamp) {
+        uint64_t one;
+        ssize_t nRead = read(tfd, &one, sizeof(one));
+        if (nRead != 8) {
+            LOG_ERROR("read timer fd nRead :{} is not equal to 8, errno: {}", nRead, errno);
+        }
+
+        if (inLoopThread()) {
+            task();
+        } else {
+            runInLoop(task);
+        }
+    });
+    pChannel->enableReading();
 }
