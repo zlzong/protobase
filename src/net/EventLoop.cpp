@@ -173,12 +173,6 @@ bool EventLoop::hasChannel(Channel *channel) {
     return m_poller->hasChannel(channel);
 }
 
-void EventLoop::runAt(Timestamp time, const TimerTask &task) {
-    int64_t now = Timestamp::now().microSecondsSinceEpoch();
-    int64_t t = time.microSecondsSinceEpoch();
-    runAfter(t-now,task);
-}
-
 void EventLoop::handleTimerEvent(int tfd, TimerTask &task, Channel *channel, bool repeat) {
     uint64_t one;
     ssize_t nRead = read(tfd, &one, sizeof(one));
@@ -195,34 +189,59 @@ void EventLoop::handleTimerEvent(int tfd, TimerTask &task, Channel *channel, boo
     if (!repeat) {
         channel->disableAll();
         channel->remove();
+        m_timerChannels.erase(channel->fd());
         delete channel;
     }
 }
 
-void EventLoop::runAfter(int delayMs, const TimerTask &task) {
+int EventLoop::runAt(Timestamp time, const TimerTask &task) {
+    int64_t now = Timestamp::now().microSecondsSinceEpoch();
+    int64_t t = time.microSecondsSinceEpoch();
+    return runAfter(t-now,task);
+}
+
+int EventLoop::runAfter(int delayMs, const TimerTask &task) {
     int tfd = createTimerFd(delayMs, 0);
     auto *pChannel = new Channel(this, tfd);
     pChannel->setReadCallback(std::bind(&EventLoop::handleTimerEvent, this, tfd, task, pChannel, false));
     pChannel->enableReading();
+    m_timerChannels[tfd] = pChannel;
+    return tfd;
 }
 
-void EventLoop::runAfter(int delayMs, TimerTask &&task) {
+int EventLoop::runAfter(int delayMs, TimerTask &&task) {
     int tfd = createTimerFd(delayMs, 0);
     auto *pChannel = new Channel(this, tfd);
     pChannel->setReadCallback(std::bind(&EventLoop::handleTimerEvent, this, tfd, task, pChannel, false));
     pChannel->enableReading();
+    m_timerChannels[tfd] = pChannel;
+    return tfd;
 }
 
-void EventLoop::runEvery(int delayMs, const TimerTask &task) {
+int EventLoop::runEvery(int delayMs, const TimerTask &task) {
     int tfd = createTimerFd(delayMs, delayMs);
     auto *pChannel = new Channel(this, tfd);
     pChannel->setReadCallback(std::bind(&EventLoop::handleTimerEvent, this, tfd, task, pChannel, true));
     pChannel->enableReading();
+    m_timerChannels[tfd] = pChannel;
+    return tfd;
 }
 
-void EventLoop::runEvery(int delayMs, TimerTask &&task) {
+int EventLoop::runEvery(int delayMs, TimerTask &&task) {
     int tfd = createTimerFd(delayMs, delayMs);
     auto *pChannel = new Channel(this, tfd);
     pChannel->setReadCallback(std::bind(&EventLoop::handleTimerEvent, this, tfd, task, pChannel, true));
     pChannel->enableReading();
+    m_timerChannels[tfd] = pChannel;
+    return tfd;
+}
+
+void EventLoop::cancel(int timerId) {
+    Channel *pChannel = m_timerChannels[timerId];
+    if (pChannel) {
+        pChannel->disableAll();
+        pChannel->remove();
+        m_timerChannels.erase(timerId);
+        delete pChannel;
+    }
 }

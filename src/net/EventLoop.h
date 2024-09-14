@@ -44,17 +44,17 @@ public:
 
     bool inLoopThread() const { return m_threadId == CurrentThread::currentTid(); }
 
-    void runAt(Timestamp time, const TimerTask &task);
+    int runAt(Timestamp time, const TimerTask &task);
 
-    void runAfter(int delayMs, const TimerTask &task);
+    int runAfter(int delayMs, const TimerTask &task);
 
-    void runAfter(int delayMs, TimerTask &&task);
+    int runAfter(int delayMs, TimerTask &&task);
 
-    void runEvery(int intervalMs, const TimerTask &task);
+    int runEvery(int intervalMs, const TimerTask &task);
 
-    void runEvery(int intervalMs, TimerTask &&task);
+    int runEvery(int intervalMs, TimerTask &&task);
 
-//    void cancel(TimerId timerId);
+    void cancel(int timerId);
 
 private:
     void handleTimerEvent(int tFd, TimerTask &task, Channel *channel, bool repeat);
@@ -77,4 +77,5 @@ private:
     std::vector<Functor> m_pendingFunctors;
     std::mutex m_mutex;
     std::string m_name;
+    std::unordered_map<int,Channel *> m_timerChannels;
 };
