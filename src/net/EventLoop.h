@@ -57,6 +57,8 @@ public:
 //    void cancel(TimerId timerId);
 
 private:
+    void handleTimerEvent(int tFd, TimerTask &task, Channel *channel, bool repeat);
+
     void readEventFd() const;
 
     void doPendingFunctors();
@@ -69,9 +71,7 @@ private:
     const pid_t m_threadId;
     Timestamp m_pollReturnTime;
     std::unique_ptr<Poller> m_poller;
-//    TimerWheel m_timerWheel;
     std::unique_ptr<Channel> m_wakeUpChannel;
-//    std::unique_ptr<Channel> m_timerChannel;
     ChannelList m_activeChannels;
     std::atomic<bool> m_callingPendingFunctors;
     std::vector<Functor> m_pendingFunctors;
