@@ -202,7 +202,6 @@ void EventLoop::handleTimerEvent(int tfd, TimerTask &task, Channel *channel, boo
 void EventLoop::runAfter(int delayMs, const TimerTask &task) {
     int tfd = createTimerFd(delayMs, 0);
     auto *pChannel = new Channel(this, tfd);
-    pChannel->setName("runAfter&");
     pChannel->setReadCallback(std::bind(&EventLoop::handleTimerEvent, this, tfd, task, pChannel, false));
     pChannel->enableReading();
 }
@@ -210,7 +209,6 @@ void EventLoop::runAfter(int delayMs, const TimerTask &task) {
 void EventLoop::runAfter(int delayMs, TimerTask &&task) {
     int tfd = createTimerFd(delayMs, 0);
     auto *pChannel = new Channel(this, tfd);
-    pChannel->setName("runAfter&&");
     pChannel->setReadCallback(std::bind(&EventLoop::handleTimerEvent, this, tfd, task, pChannel, false));
     pChannel->enableReading();
 }
@@ -218,7 +216,6 @@ void EventLoop::runAfter(int delayMs, TimerTask &&task) {
 void EventLoop::runEvery(int delayMs, const TimerTask &task) {
     int tfd = createTimerFd(delayMs, delayMs);
     auto *pChannel = new Channel(this, tfd);
-    pChannel->setName("runEvery&");
     pChannel->setReadCallback(std::bind(&EventLoop::handleTimerEvent, this, tfd, task, pChannel, true));
     pChannel->enableReading();
 }
@@ -226,7 +223,6 @@ void EventLoop::runEvery(int delayMs, const TimerTask &task) {
 void EventLoop::runEvery(int delayMs, TimerTask &&task) {
     int tfd = createTimerFd(delayMs, delayMs);
     auto *pChannel = new Channel(this, tfd);
-    pChannel->setName("runEvery&&");
     pChannel->setReadCallback(std::bind(&EventLoop::handleTimerEvent, this, tfd, task, pChannel, true));
     pChannel->enableReading();
 }
