@@ -185,7 +185,7 @@ void Connector::retry(int sockFd) {
 
     if (m_connect) {
         LOG_INFO("retry connect, retry interval ms: {}, max retry interval ms: {}", m_retryIntervalMillSeconds, kMaxRetryIntervalMillSeconds);
-        ownerLoop()->runAfter(m_retryIntervalMillSeconds / 1000.0, [this]{startInLoop();});
+        ownerLoop()->runAfter(m_retryIntervalMillSeconds * 1000, [this]{startInLoop();});
         m_retryIntervalMillSeconds = std::min(m_retryIntervalMillSeconds * 2, kMaxRetryIntervalMillSeconds);
     } else {
         LOG_INFO("connect may stop, m_connect: {}", m_connect);

@@ -185,10 +185,6 @@ void Connection::onClose() {
     ConnectionPtr connectionPtr(std::static_pointer_cast<Connection>(shared_from_this()));
     setState(kDisconnected);
 
-//    if (m_connectionCallback) {
-//        m_connectionCallback(connectionPtr);
-//    }
-
     if (m_closeCallback) {
         m_closeCallback(connectionPtr);
     }

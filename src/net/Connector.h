@@ -46,8 +46,8 @@ private:
     void resetChannel();
 
 private:
-    static const int kMaxRetryIntervalMillSeconds = 30 * 1000;
-    static const int kInitRetryIntervalMillSeconds = 1 * 1000;
+    static constexpr int kMaxRetryIntervalMillSeconds = 30;
+    static constexpr int kInitRetryIntervalMillSeconds = 1;
 
     InetAddress m_serverAddr;
     bool m_connect;
