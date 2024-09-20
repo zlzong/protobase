@@ -23,9 +23,8 @@ int main() {
     client.enableRetry();
     client.clientConnect();
 
-    int timerId = pLoop->runEvery(3*1000,[]{
-        std::this_thread::sleep_for(std::chrono::seconds(2));
-        LOG_ERROR("i do it");
+    int timerId = pLoop->runEvery(3*1000,[&]{
+        client.connection()->send("hello", 5);
     });
 
     std::this_thread::sleep_for(std::chrono::seconds(20));
