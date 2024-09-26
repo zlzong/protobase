@@ -19,7 +19,7 @@ Timestamp Timestamp::now() {
 
 std::string Timestamp::localeString() const {
     char buf[128] = {0};
-  int64_t secondsSinceEpoch = m_microSecondsSinceEpoch / 1000000;
+  time_t secondsSinceEpoch = time_t(m_microSecondsSinceEpoch / 1000000);
   tm *tm_time = localtime(&secondsSinceEpoch);
     snprintf(buf, 128, "%4d/%02d/%02d %02d:%02d:%02d",
              tm_time->tm_year + 1900,

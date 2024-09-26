@@ -4,8 +4,6 @@
 #include <string>
 #include <unistd.h>
 #include <sys/uio.h>
-#include <bits/byteswap.h>
-#include <bits/uintn-identity.h>
 
 size_t Buffer::readableBytes() const {
     return m_writeIndex - m_readIndex;
@@ -82,22 +80,22 @@ void Buffer::append(const void *data, size_t len) {
 }
 
 void Buffer::appendU16BE(uint16_t u16) {
-    __uint16_t u16BE = __uint16_identity(u16);
+    uint16_t u16BE = htobe16(u16);
     append(&u16BE, sizeof(u16BE));
 }
 
 void Buffer::appendU16LE(uint16_t u16) {
-    __uint16_t u16LE = __bswap_16(u16);
+    uint16_t u16LE = htole16(u16);
     append(&u16LE, sizeof(u16LE));
 }
 
 void Buffer::appendU32BE(uint32_t u32) {
-    __uint32_t u32BE = __uint32_identity(u32);
+    uint32_t u32BE = htobe32(u32);
     append(&u32BE, sizeof(u32BE));
 }
 
 void Buffer::appendU32LE(uint32_t u32) {
-    __uint32_t u32LE = __bswap_32(u32);
+    uint32_t u32LE = htole32(u32);
     append(&u32LE, sizeof(u32LE));
 }
 
