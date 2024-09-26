@@ -79,23 +79,23 @@ void Buffer::append(const void *data, size_t len) {
     append(static_cast<const char *>(data), len);
 }
 
-void Buffer::appendU16BE(uint16_t u16) {
-    uint16_t u16BE = htobe16(u16);
+void Buffer::appendU16LE(uint16_t u16) {
+    uint16_t u16BE = htole16(u16);
     append(&u16BE, sizeof(u16BE));
 }
 
-void Buffer::appendU16LE(uint16_t u16) {
-    uint16_t u16LE = htole16(u16);
+void Buffer::appendU16BE(uint16_t u16) {
+    uint16_t u16LE = htobe16(u16);
     append(&u16LE, sizeof(u16LE));
 }
 
-void Buffer::appendU32BE(uint32_t u32) {
-    uint32_t u32BE = htobe32(u32);
+void Buffer::appendU32LE(uint32_t u32) {
+    uint32_t u32BE = htole32(u32);
     append(&u32BE, sizeof(u32BE));
 }
 
-void Buffer::appendU32LE(uint32_t u32) {
-    uint32_t u32LE = htole32(u32);
+void Buffer::appendU32BE(uint32_t u32) {
+    uint32_t u32LE = htobe32(u32);
     append(&u32LE, sizeof(u32LE));
 }
 
