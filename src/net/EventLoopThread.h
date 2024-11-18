@@ -19,6 +19,10 @@ public:
 
     EventLoop *startLoop();
 
+    EventLoop *getLoop() const {
+        return m_eventLoop;
+    }
+
 private:
     void threadFunc();
 
