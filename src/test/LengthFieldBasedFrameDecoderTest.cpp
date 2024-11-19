@@ -7,7 +7,7 @@
 EventLoopThread eventLoopThread;
 
 int main() {
-    LengthFieldBasedFrameDecoder lengthFieldBasedFrameDecoder{1417,2,2,23,0};
+    LengthFieldBasedFrameDecoder lengthFieldBasedFrameDecoder{1417,5,5,13,2};
     EventLoop *pLoop = eventLoopThread.startLoop();
     InetAddress inetAddress(9999, "192.168.86.183");
     TcpClient client(pLoop,inetAddress,"test");
