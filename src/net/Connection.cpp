@@ -144,7 +144,23 @@ void Connection::onRead(Timestamp receiveTime) {
     size_t nRead = m_inputBuffer.readFd(fd());
     if (nRead > 0) {
         if (m_messageCallback) {
-            m_messageCallback(std::static_pointer_cast<Connection>(shared_from_this()), &m_inputBuffer, receiveTime);
+            if (m_decoder) {
+                while (m_inputBuffer.readableBytes() != 0) {
+                    try {
+                        Buffer decodedBuff = m_decoder->decode(&m_inputBuffer);
+                        if (decodedBuff.readableBytes() == 0) {
+                            break;
+                        }
+                        m_messageCallback(std::static_pointer_cast<Connection>(shared_from_this()), &decodedBuff, receiveTime);
+                    } catch (std::exception& e) {
+                        LOG_ERROR(e.what());
+                        forceClose();
+                        break;
+                    }
+                }
+            } else {
+                m_messageCallback(std::static_pointer_cast<Connection>(shared_from_this()), &m_inputBuffer, receiveTime);
+            }
         }
     } else if (nRead == 0) {
         LOG_WARN("connection reset by peer");

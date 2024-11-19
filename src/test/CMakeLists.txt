@@ -3,3 +3,6 @@ target_link_libraries(TcpClientTest base net)
 
 add_executable(TcpServerTest TcpServerTest.cpp)
 target_link_libraries(TcpServerTest base net)
+
+add_executable(LengthFieldBasedFrameDecoderTest LengthFieldBasedFrameDecoderTest.cpp)
+target_link_libraries(LengthFieldBasedFrameDecoderTest base net codecs)

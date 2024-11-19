@@ -4,6 +4,8 @@
 #include <string>
 #include <unistd.h>
 #include <sys/uio.h>
+#include <sstream>
+#include <iomanip>
 
 size_t Buffer::readableBytes() const {
     return m_writeIndex - m_readIndex;
@@ -24,6 +26,14 @@ const char *Buffer::peek() const {
 
 char *Buffer::peek() {
     return begin() + m_readIndex;
+}
+
+const char *Buffer::peek(size_t offset) const {
+    return begin() + m_readIndex + offset;
+}
+
+char *Buffer::peek(size_t offset) {
+    return begin() + m_readIndex + offset;
 }
 
 void Buffer::retrieve(size_t len) {
@@ -51,10 +61,25 @@ std::string Buffer::retrieveAllString() {
     return retrieveAsString(readableBytes());
 }
 
+std::string Buffer::retrieveAllHexString() {
+    return retrieveAsHexString(readableBytes());
+}
+
 std::string Buffer::retrieveAsString(size_t len) {
     std::string result(peek(), len);
     retrieve(len);
     return result;
+}
+
+std::string Buffer::retrieveAsHexString(size_t len) {
+    std::stringstream hex;
+    hex << std::hex << std::uppercase << std::setfill('0');
+    for (int i = 0; i < len; ++i) {
+        hex << std::setw(2) << static_cast<int>(*reinterpret_cast<unsigned char *>(peek(i)));
+    }
+
+    retrieve(len);
+    return hex.str();
 }
 
 void Buffer::ensureWriteableBytes(size_t len) {

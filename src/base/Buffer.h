@@ -32,6 +32,10 @@ public:
 
     char *peek();
 
+    const char *peek(size_t offset) const;
+
+    char *peek(size_t offset);
+
     void retrieve(size_t len);
 
     void writeN(size_t len);
@@ -42,7 +46,11 @@ public:
 
     std::string retrieveAllString();
 
+    std::string retrieveAllHexString();
+
     std::string retrieveAsString(size_t len);
+
+    std::string retrieveAsHexString(size_t len);
 
     void ensureWriteableBytes(size_t len);
 
