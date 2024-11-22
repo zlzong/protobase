@@ -3,7 +3,6 @@
 #include "Types.h"
 #include "Logger.h"
 
-#include <vector>
 #include <string>
 #include <cstdint>
 
@@ -13,14 +12,53 @@ public:
     static const size_t kInitialSize = 1024;
 
     explicit Buffer(size_t initialSize = kInitialSize)
-            : m_buffer(kCheapPrepend + initialSize),
-              m_readIndex(kCheapPrepend),
+            : m_readIndex(kCheapPrepend),
               m_writeIndex(kCheapPrepend),
               m_capacity(kCheapPrepend + initialSize) {
-
+        m_buffer = new char[m_capacity];
     }
 
-    ~Buffer() = default;
+    ~Buffer() {
+        delete[] m_buffer;
+        m_buffer = nullptr;
+        m_capacity = 0;
+    }
+
+    Buffer(const Buffer& other) {
+        m_buffer = new char[other.m_capacity];
+        m_readIndex = other.m_readIndex;
+        m_writeIndex = other.m_writeIndex;
+        m_capacity = other.m_capacity;
+        memcpy(m_buffer, other.m_buffer, other.m_capacity);
+    }
+
+    Buffer& operator=(const Buffer& other) {
+        Buffer temp(other);
+        swap(temp);
+        return *this;
+    }
+
+    void swap(Buffer& other) noexcept {
+        std::swap(m_buffer, other.m_buffer);
+        std::swap(m_capacity, other.m_capacity);
+        std::swap(m_readIndex, other.m_readIndex);
+        std::swap(m_writeIndex, other.m_writeIndex);
+    }
+
+    Buffer(Buffer&& other) noexcept : m_buffer(other.m_buffer), m_capacity(other.m_capacity), m_readIndex(other.m_readIndex), m_writeIndex(other.m_writeIndex) {
+        other.m_buffer = nullptr;
+        other.m_capacity = 0;
+        other.m_readIndex = kCheapPrepend;
+        other.m_writeIndex = kCheapPrepend;
+    }
+
+    Buffer& operator=(Buffer&& other) noexcept {
+        if (this != &other) {
+            swap(other);
+        }
+
+        return *this;
+    }
 
     size_t readableBytes() const;
 
@@ -108,7 +146,7 @@ private:
 
     void makeSpace(size_t len);
 
-    std::vector<char> m_buffer;
+    char *m_buffer;
     size_t m_readIndex;
     size_t m_writeIndex;
     size_t m_capacity;

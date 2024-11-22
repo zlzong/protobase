@@ -12,7 +12,7 @@ size_t Buffer::readableBytes() const {
 }
 
 size_t Buffer::writableBytes() const {
-    return m_buffer.size() - m_writeIndex;
+    return m_capacity - m_writeIndex;
 }
 
 
@@ -164,7 +164,7 @@ size_t Buffer::readFd(int fd) {
     } else if (nRead <= writeable) {
         m_writeIndex += nRead;
     } else {
-        m_writeIndex = m_buffer.size();
+        m_writeIndex = m_capacity;
         append(extraBuf, nRead - writeable);
     }
 
@@ -233,20 +233,32 @@ size_t Buffer::capacity() {
 }
 
 char *Buffer::begin() {
-    return &*m_buffer.begin();
+    return m_buffer;
 }
 
 const char *Buffer::begin() const {
-    return &*m_buffer.begin();
+    return m_buffer;
 }
 
 void Buffer::makeSpace(size_t len) {
     if (writableBytes() + prependableBytes() < len + kCheapPrepend) {
-        m_buffer.resize(m_writeIndex + len);
-    } else {
-        size_t readable = readableBytes();
-        std::copy(begin() + m_readIndex, begin() + m_writeIndex, begin() + kCheapPrepend);
+        // m_buffer.resize(m_writeIndex + len);
+        const size_t resizedCapacity = (m_capacity << 1) + len;
+        const size_t readable = readableBytes();
+        const auto d = new char[resizedCapacity];
+        memcpy(d + kCheapPrepend, begin() + m_readIndex, readableBytes());
+        m_writeIndex = readable + kCheapPrepend;
         m_readIndex = kCheapPrepend;
-        m_writeIndex = m_readIndex + readable;
+        m_capacity = resizedCapacity;
+        delete[] m_buffer;
+        m_buffer = d;
+    } else {
+        // size_t readable = readableBytes();
+        // std::copy(begin() + m_readIndex, begin() + m_writeIndex, begin() + kCheapPrepend);
+        // m_readIndex = kCheapPrepend;
+        // m_writeIndex = m_readIndex + readable;
+        memmove(begin() + kCheapPrepend, begin() + m_readIndex, readableBytes());
+        m_readIndex = kCheapPrepend;
+        m_writeIndex = m_readIndex + readableBytes();
     }
 }
