@@ -90,13 +90,13 @@ void Buffer::ensureWriteableBytes(size_t len) {
 
 void Buffer::append(const char *data, size_t len) {
     ensureWriteableBytes(len);
-    std::copy(data, data + len, beginWrite());
+    memcpy(beginWrite(),data, len);
     m_writeIndex += len;
 }
 
 void Buffer::append(const unsigned char *data, size_t len) {
     ensureWriteableBytes(len);
-    std::copy(data, data + len, beginWrite());
+    memcpy(beginWrite(),data, len);
     m_writeIndex += len;
 }
 
@@ -145,7 +145,7 @@ const char *Buffer::beginWrite() const {
 }
 
 size_t Buffer::readFd(int fd) {
-    char extraBuf[65536] = {0};
+    char extraBuf[65536];
 
     struct iovec vec[2];
 
@@ -242,23 +242,19 @@ const char *Buffer::begin() const {
 
 void Buffer::makeSpace(size_t len) {
     if (writableBytes() + prependableBytes() < len + kCheapPrepend) {
-        // m_buffer.resize(m_writeIndex + len);
         const size_t resizedCapacity = (m_capacity << 1) + len;
         const size_t readable = readableBytes();
         const auto d = new char[resizedCapacity];
-        memcpy(d + kCheapPrepend, begin() + m_readIndex, readableBytes());
+        memcpy(d + kCheapPrepend, begin() + m_readIndex, readable);
         m_writeIndex = readable + kCheapPrepend;
         m_readIndex = kCheapPrepend;
         m_capacity = resizedCapacity;
         delete[] m_buffer;
         m_buffer = d;
     } else {
-        // size_t readable = readableBytes();
-        // std::copy(begin() + m_readIndex, begin() + m_writeIndex, begin() + kCheapPrepend);
-        // m_readIndex = kCheapPrepend;
-        // m_writeIndex = m_readIndex + readable;
-        memmove(begin() + kCheapPrepend, begin() + m_readIndex, readableBytes());
+        size_t readable = readableBytes();
+        memmove(begin() + kCheapPrepend, begin() + m_readIndex, readable);
         m_readIndex = kCheapPrepend;
-        m_writeIndex = m_readIndex + readableBytes();
+        m_writeIndex = m_readIndex + readable;
     }
 }

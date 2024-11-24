@@ -9,7 +9,7 @@
 class Buffer {
 public:
     static const size_t kCheapPrepend = 8;
-    static const size_t kInitialSize = 1024;
+    static const size_t kInitialSize = 1450;
 
     explicit Buffer(size_t initialSize = kInitialSize)
             : m_readIndex(kCheapPrepend),
@@ -45,7 +45,7 @@ public:
         std::swap(m_writeIndex, other.m_writeIndex);
     }
 
-    Buffer(Buffer&& other) noexcept : m_buffer(other.m_buffer), m_capacity(other.m_capacity), m_readIndex(other.m_readIndex), m_writeIndex(other.m_writeIndex) {
+    Buffer(Buffer&& other) noexcept : m_buffer(other.m_buffer), m_readIndex(other.m_readIndex), m_writeIndex(other.m_writeIndex), m_capacity(other.m_capacity) {
         other.m_buffer = nullptr;
         other.m_capacity = 0;
         other.m_readIndex = kCheapPrepend;
