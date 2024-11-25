@@ -36,11 +36,11 @@ char *Buffer::peek(size_t offset) {
     return begin() + m_readIndex + offset;
 }
 
-void Buffer::retrieve(size_t len) {
+void Buffer::skip(size_t len) {
     if (len < readableBytes()) {
         m_readIndex += len;
     } else {
-        retrieveAll();
+        readAll();
     }
 }
 
@@ -49,36 +49,36 @@ void Buffer::writeN(size_t len) {
 }
 
 void Buffer::reset() {
-    m_readIndex = kCheapPrepend;
-    m_writeIndex = kCheapPrepend;
+    m_readIndex = kPrependSize;
+    m_writeIndex = kPrependSize;
 }
 
-void Buffer::retrieveAll() {
-    m_readIndex = m_writeIndex = kCheapPrepend;
+void Buffer::readAll() {
+    m_readIndex = m_writeIndex = kPrependSize;
 }
 
-std::string Buffer::retrieveAllString() {
-    return retrieveAsString(readableBytes());
+std::string Buffer::readAllAsString() {
+    return readAsString(readableBytes());
 }
 
-std::string Buffer::retrieveAllHexString() {
-    return retrieveAsHexString(readableBytes());
-}
-
-std::string Buffer::retrieveAsString(size_t len) {
+std::string Buffer::readAsString(size_t len) {
     std::string result(peek(), len);
-    retrieve(len);
+    skip(len);
     return result;
 }
 
-std::string Buffer::retrieveAsHexString(size_t len) {
+std::string Buffer::readAllAsHexString() {
+    return readAsHexString(readableBytes());
+}
+
+std::string Buffer::readAsHexString(size_t len) {
     std::stringstream hex;
     hex << std::hex << std::uppercase << std::setfill('0');
     for (int i = 0; i < len; ++i) {
         hex << std::setw(2) << static_cast<int>(*reinterpret_cast<unsigned char *>(peek(i)));
     }
 
-    retrieve(len);
+    skip(len);
     return hex.str();
 }
 
@@ -132,7 +132,7 @@ void Buffer::appendChar(char c) {
     append(&c, sizeof(c));
 }
 
-void Buffer::appendUChar(unsigned char us) {
+void Buffer::appendU8(uint8_t us) {
     append(&us, sizeof(us));
 }
 
@@ -173,34 +173,19 @@ size_t Buffer::readFd(int fd) {
 
 char Buffer::readChar() {
     char c = *peek();
-    retrieve(sizeof(c));
+    skip(sizeof(c));
     return c;
 }
 
-unsigned char Buffer::readUChar() {
-    char *c = peek();
-    unsigned char *uc = reinterpret_cast<unsigned char *>(c);
-    retrieve(sizeof(char));
-    return *uc;
-}
-
-BufferPtr Buffer::readBuffer(int len) {
-    BufferPtr buffer = std::make_shared<Buffer>(len);
-    buffer->append(peek(), len);
-    retrieve(len);
-    return buffer;
-}
-
-uint16_t Buffer::readU16LE() {
-    const char *start = peek();
-    uint16_t num = *(uint16_t *) start;
-    retrieve(sizeof(num));
+unsigned char Buffer::readU8() {
+    const uint8_t num = peekU8(0);
+    skip(sizeof(num));
     return num;
 }
 
-uint16_t Buffer::peekU16LE(int offset) const {
-    const char *start = peek() + offset;
-    uint16_t num = *(uint16_t *) start;
+uint16_t Buffer::readU16LE() {
+    const uint16_t num = peekU16LE(0);
+    skip(sizeof(num));
     return num;
 }
 
@@ -209,14 +194,38 @@ uint16_t Buffer::readU16BE() {
 }
 
 uint32_t Buffer::readU32LE() {
-    const char *start = peek();
-    uint32_t num = *(uint32_t *) start;
-    retrieve(sizeof(num));
+    const uint32_t num = peekU32LE(0);
+    skip(sizeof(num));
     return num;
 }
 
 uint32_t Buffer::readU32BE() {
     return 0;
+}
+
+uint8_t Buffer::peekU8(int offset) const {
+    const char *start = peek() + offset;
+    const uint8_t num = *reinterpret_cast<const uint8_t *>(start);
+    return num;
+}
+
+uint16_t Buffer::peekU16LE(int offset) const {
+    const char *start = peek() + offset;
+    const uint16_t num = *reinterpret_cast<const uint16_t *>(start);
+    return num;
+}
+
+uint32_t Buffer::peekU32LE(int offset) const {
+    const char *start = peek() + offset;
+    const uint32_t num = *reinterpret_cast<const uint32_t *>(start);
+    return num;
+}
+
+BufferPtr Buffer::readBuffer(int len) {
+    BufferPtr buffer = std::make_shared<Buffer>(len);
+    buffer->append(peek(), len);
+    skip(len);
+    return buffer;
 }
 
 size_t Buffer::writeFd(int fd) {
@@ -241,20 +250,20 @@ const char *Buffer::begin() const {
 }
 
 void Buffer::makeSpace(size_t len) {
-    if (writableBytes() + prependableBytes() < len + kCheapPrepend) {
+    if (writableBytes() + prependableBytes() < len + kPrependSize) {
         const size_t resizedCapacity = (m_capacity << 1) + len;
         const size_t readable = readableBytes();
         const auto d = new char[resizedCapacity];
-        memcpy(d + kCheapPrepend, begin() + m_readIndex, readable);
-        m_writeIndex = readable + kCheapPrepend;
-        m_readIndex = kCheapPrepend;
+        memcpy(d + kPrependSize, begin() + m_readIndex, readable);
+        m_writeIndex = readable + kPrependSize;
+        m_readIndex = kPrependSize;
         m_capacity = resizedCapacity;
         delete[] m_buffer;
         m_buffer = d;
     } else {
         size_t readable = readableBytes();
-        memmove(begin() + kCheapPrepend, begin() + m_readIndex, readable);
-        m_readIndex = kCheapPrepend;
+        memmove(begin() + kPrependSize, begin() + m_readIndex, readable);
+        m_readIndex = kPrependSize;
         m_writeIndex = m_readIndex + readable;
     }
 }

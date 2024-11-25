@@ -175,7 +175,7 @@ void Connection::onWrite() {
     if (isWriting()) {
         size_t nWrite = m_outputBuffer.writeFd(fd());
         if (nWrite > 0) {
-            m_outputBuffer.retrieve(nWrite);
+            m_outputBuffer.skip(nWrite);
 
             if (m_outputBuffer.readableBytes() == 0) {
                 disableWriting();

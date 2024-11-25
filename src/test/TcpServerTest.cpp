@@ -7,7 +7,7 @@ void connectionEvent(const ConnectionPtr &tcpConnectionPtr) {
 }
 
 void onMessage(const ConnectionPtr &connection, Buffer *message, Timestamp timestamp) {
-    LOG_ERROR("time: {}, receive: {}", timestamp.localeString(), message->retrieveAllString());
+    LOG_ERROR("time: {}, receive: {}", timestamp.localeString(), message->readAllAsString());
 }
 
 

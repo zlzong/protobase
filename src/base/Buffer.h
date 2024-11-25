@@ -8,13 +8,13 @@
 
 class Buffer {
 public:
-    static const size_t kCheapPrepend = 8;
+    static const size_t kPrependSize = 8;
     static const size_t kInitialSize = 1450;
 
     explicit Buffer(size_t initialSize = kInitialSize)
-            : m_readIndex(kCheapPrepend),
-              m_writeIndex(kCheapPrepend),
-              m_capacity(kCheapPrepend + initialSize) {
+            : m_readIndex(kPrependSize),
+              m_writeIndex(kPrependSize),
+              m_capacity(kPrependSize + initialSize) {
         m_buffer = new char[m_capacity];
     }
 
@@ -48,8 +48,8 @@ public:
     Buffer(Buffer&& other) noexcept : m_buffer(other.m_buffer), m_readIndex(other.m_readIndex), m_writeIndex(other.m_writeIndex), m_capacity(other.m_capacity) {
         other.m_buffer = nullptr;
         other.m_capacity = 0;
-        other.m_readIndex = kCheapPrepend;
-        other.m_writeIndex = kCheapPrepend;
+        other.m_readIndex = kPrependSize;
+        other.m_writeIndex = kPrependSize;
     }
 
     Buffer& operator=(Buffer&& other) noexcept {
@@ -74,21 +74,21 @@ public:
 
     char *peek(size_t offset);
 
-    void retrieve(size_t len);
+    void skip(size_t len);
 
     void writeN(size_t len);
 
     void reset();
 
-    void retrieveAll();
+    void readAll();
 
-    std::string retrieveAllString();
+    std::string readAllAsString();
 
-    std::string retrieveAllHexString();
+    std::string readAsString(size_t len);
 
-    std::string retrieveAsString(size_t len);
+    std::string readAllAsHexString();
 
-    std::string retrieveAsHexString(size_t len);
+    std::string readAsHexString(size_t len);
 
     void ensureWriteableBytes(size_t len);
 
@@ -106,19 +106,23 @@ public:
 
     char readChar();
 
-    unsigned char readUChar();
-
-    BufferPtr readBuffer(int len);
+    uint8_t readU8();
 
     uint16_t readU16LE();
-
-    uint16_t peekU16LE(int offset) const;
 
     uint16_t readU16BE();
 
     uint32_t readU32LE();
 
     uint32_t readU32BE();
+
+    uint8_t peekU8(int offset) const;
+
+    uint16_t peekU16LE(int offset) const;
+
+    uint32_t peekU32LE(int offset) const;
+
+    BufferPtr readBuffer(int len);
 
     size_t writeFd(int fd);
 
@@ -136,7 +140,7 @@ public:
 
     void appendChar(char c);
 
-    void appendUChar(unsigned char us);
+    void appendU8(uint8_t us);
 
 private:
 

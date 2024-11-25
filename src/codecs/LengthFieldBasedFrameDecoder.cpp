@@ -53,6 +53,6 @@ Buffer LengthFieldBasedFrameDecoder::decode(Buffer *buffer) {
     }
 
     buf.append(buffer->peek(), frameLength);
-    buffer->retrieve(frameLength);
+    buffer->skip(frameLength);
     return buf;
 }

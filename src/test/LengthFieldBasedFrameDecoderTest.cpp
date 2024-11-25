@@ -20,7 +20,7 @@ int main() {
     };
 
     client.setMessageCallback([&](const ConnectionPtr &connection, Buffer *message, Timestamp timestamp) {
-        std::cout << message->retrieveAllHexString() << std::endl;
+        std::cout << message->readAllAsHexString() << std::endl;
     });
 
     client.setConnectionCallback([&](const ConnectionPtr & connection) {

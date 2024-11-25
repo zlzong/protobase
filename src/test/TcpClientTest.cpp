@@ -11,7 +11,7 @@ int main() {
     TcpClient client(pLoop,inetAddress,"test");
 
     client.setMessageCallback([](const ConnectionPtr &connection, Buffer *message, Timestamp timestamp) {
-        std::string receiveMessage = message->retrieveAllString();
+        std::string receiveMessage = message->readAllAsString();
         LOG_INFO("time: {}, mesasge: {}", timestamp.localeString(), receiveMessage);
         connection->send(receiveMessage);
     });
