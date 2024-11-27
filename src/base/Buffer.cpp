@@ -205,7 +205,7 @@ uint32_t Buffer::readU32BE() {
 
 uint8_t Buffer::peekU8(int offset) const {
     const char *start = peek() + offset;
-    const uint8_t num = *reinterpret_cast<const uint8_t *>(start);
+    const auto num = static_cast<const uint8_t>(*start);
     return num;
 }
 
