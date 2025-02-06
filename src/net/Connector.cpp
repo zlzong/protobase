@@ -59,7 +59,7 @@ void Connector::connect() {
     sockaddr *pSockAddr = m_serverAddr.getSockAddr();
     int connectRet = ::connect(sockFd, pSockAddr, sizeof(sockaddr));
     int errorNo = connectRet == 0 ? 0 : errno;
-    LOG_INFO("connect status: {}, errno: {}", connectRet, errorNo);
+    LOG_ERROR("connect error with errno: {}, description: {}, connect status: {}", errorNo, std::strerror(errorNo), connectRet);
     switch (errorNo) {
         case 0:
             // 操作正在进行中。对于非阻塞套接字,这表示连接请求已经发起但尚未完成
@@ -96,7 +96,6 @@ void Connector::connect() {
         case EFAULT:
             // 文件描述符不是一个套接字
         case ENOTSOCK:
-            LOG_ERROR("connect error with errno: {}", errorNo);
             ::close(sockFd);
             setFd(-1);
             break;
@@ -152,28 +151,29 @@ void Connector::onError(const std::string &errMsg) {
         int err;
         auto optLen = static_cast<socklen_t>(sizeof(err));
         ::getsockopt(sockFd, SOL_SOCKET, SO_ERROR, &err, &optLen);
-        switch (err) {
-        case ECONNREFUSED:
-            LOG_ERROR("connection refused");
-            break;
-        case ETIMEDOUT:
-            LOG_ERROR("connection timed out");
-            break;
-        case ECONNRESET:
-            LOG_ERROR("connection reset by peer");
-            break;
-        case EHOSTUNREACH:
-            LOG_ERROR("no route to host");
-            break;
-        case ENETUNREACH:
-            LOG_ERROR("network is unreachable");
-            break;
-        case EADDRINUSE:
-            LOG_ERROR("address already in use");
-            break;
-        default:
-            LOG_ERROR("unknown socket error: {}", err);
-        }
+        LOG_ERROR("error: {}, description: {}", err, std::strerror(err));
+//        switch (err) {
+//        case ECONNREFUSED:
+//            LOG_ERROR("connection refused");
+//            break;
+//        case ETIMEDOUT:
+//            LOG_ERROR("connection timed out");
+//            break;
+//        case ECONNRESET:
+//            LOG_ERROR("connection reset by peer");
+//            break;
+//        case EHOSTUNREACH:
+//            LOG_ERROR("no route to host");
+//            break;
+//        case ENETUNREACH:
+//            LOG_ERROR("network is unreachable");
+//            break;
+//        case EADDRINUSE:
+//            LOG_ERROR("address already in use");
+//            break;
+//        default:
+//            LOG_ERROR("unknown socket error: {}", err);
+//        }
 
         retry(sockFd);
     }
