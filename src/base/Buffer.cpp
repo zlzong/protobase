@@ -95,6 +95,10 @@ void Buffer::append(const char *data, size_t len) {
 }
 
 void Buffer::append(const unsigned char *data, size_t len) {
+    if (len <= 0) {
+        LOG_ERROR("data is null, len: {}", len);
+        return;
+    }
     ensureWriteableBytes(len);
     memcpy(beginWrite(),data, len);
     m_writeIndex += len;
