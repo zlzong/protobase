@@ -1,3 +1,4 @@
+#include "base/Logger.h"
 #include "net/EventLoopThread.h"
 #include "net/InetAddress.h"
 #include "net/TcpClient.h"

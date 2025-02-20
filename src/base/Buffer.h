@@ -1,9 +1,9 @@
 #pragma once
 
 #include "Types.h"
-#include "Logger.h"
 
 #include <string>
+#include <cstring>
 #include <cstdint>
 
 class Buffer {

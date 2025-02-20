@@ -1,7 +1,6 @@
 #include "Buffer.h"
 #include "Logger.h"
 
-#include <string>
 #include <unistd.h>
 #include <sys/uio.h>
 #include <sstream>
