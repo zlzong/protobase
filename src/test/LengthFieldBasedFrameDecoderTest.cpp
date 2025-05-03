@@ -20,12 +20,12 @@ int main() {
     };
 
     client.setMessageCallback([&](const ConnectionPtr &connection, Buffer *message, Timestamp timestamp) {
-        std::cout << message->readAllAsHexString() << std::endl;
+        auto shared_ptr = lengthFieldBasedFrameDecoder.decode(message);
+        std::cout << shared_ptr->readAllAsHexString() << std::endl;
     });
 
     client.setConnectionCallback([&](const ConnectionPtr & connection) {
         connection->send(raw_data, sizeof(raw_data));
-        connection->setDecoder(lengthFieldBasedFrameDecoder);
     });
 
     client.enableRetry();
