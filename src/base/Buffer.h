@@ -15,17 +15,17 @@ public:
     explicit Buffer(size_t initialSize = kInitialSize)
             : m_readIndex(kPrependSize),
               m_writeIndex(kPrependSize),
+              m_capacity(kPrependSize + initialSize),
               m_ownMemory(true) {
-        m_capacity(kPrependSize + initialSize);
         m_buffer = new char[m_capacity];
         m_refCount = new std::atomic<int>(1);
     }
 
     Buffer(char* buffer, size_t capacity, size_t readIndex, size_t writeIndex, std::atomic<int>* refCount)
             :m_buffer(buffer),
-            m_capacity(capacity),
             m_readIndex(readIndex),
             m_writeIndex(writeIndex),
+            m_capacity(capacity),
             m_refCount(refCount),
             m_ownMemory(false) {
         m_refCount->fetch_add(1, std::memory_order_relaxed);
@@ -47,9 +47,9 @@ public:
 
     Buffer(const Buffer& other)
             :m_buffer(other.m_buffer),
-            m_capacity(other.m_capacity),
             m_readIndex(other.m_readIndex),
             m_writeIndex(other.m_writeIndex),
+            m_capacity(other.m_capacity),
             m_refCount(other.m_refCount),
             m_ownMemory(false){
         m_refCount->fetch_add(1, std::memory_order_relaxed);
