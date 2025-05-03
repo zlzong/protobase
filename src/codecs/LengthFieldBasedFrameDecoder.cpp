@@ -16,12 +16,12 @@ LengthFieldBasedFrameDecoder::LengthFieldBasedFrameDecoder(size_t maxFrameLength
     }
 }
 
-Buffer LengthFieldBasedFrameDecoder::decode(Buffer *buffer) {
+BufferPtr LengthFieldBasedFrameDecoder::decode(Buffer *buffer) {
     LOG_INFO("decode called");
-    Buffer buf{};
+
     size_t readableBytes = buffer->readableBytes();
     if (readableBytes < m_lengthFieldLength + m_lengthFieldOffset) {
-        return buf;
+        return nullptr;
     }
 
     size_t payLoadLength = 0;
@@ -40,19 +40,18 @@ Buffer LengthFieldBasedFrameDecoder::decode(Buffer *buffer) {
             break;
         default:
             LOG_ERROR("Invalid length field: {}", m_lengthFieldLength);
+            return nullptr;
     }
 
     size_t frameLength = m_lengthFieldOffset + m_lengthFieldLength + payLoadLength + m_lengthAdjustment;
     if (frameLength > m_maxFrameLength) {
         LOG_ERROR("frame length exceeds maximum length: {}", frameLength);
-        throw std::overflow_error("frame length exceeds maximum length");
+        return nullptr;
     }
 
     if (readableBytes < frameLength) {
-        return buf;
+        return nullptr;
     }
 
-    buf.append(buffer->peek(), frameLength);
-    buffer->skip(frameLength);
-    return buf;
+    return buffer->slicePacket(frameLength);
 }

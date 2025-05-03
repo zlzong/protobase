@@ -55,10 +55,6 @@ public:
 
     void onConnectionEstablish();
 
-    void setDecoder(Decoder &decoder) {
-        m_decoder = &decoder;
-    }
-
 private:
     void onRead(Timestamp receiveTime) override;
 
@@ -94,5 +90,4 @@ private:
     size_t m_highWaterMark;
     Buffer m_inputBuffer;
     Buffer m_outputBuffer;
-    Decoder *m_decoder;
 };

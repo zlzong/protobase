@@ -10,7 +10,7 @@ public:
 
     ~LengthFieldBasedFrameDecoder() override = default;
 
-    Buffer decode(Buffer *buffer) override;
+    BufferPtr decode(Buffer *buffer) override;
 
 private:
     size_t m_lengthFieldOffset;

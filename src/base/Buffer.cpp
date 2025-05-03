@@ -83,8 +83,36 @@ std::string Buffer::readAsHexString(size_t len) {
 
 void Buffer::ensureWriteableBytes(size_t len) {
     if (writableBytes() < len) {
-        makeSpace(len);
+        if (m_ownMemory) {
+            makeSpace(len);
+        } else {
+            makeOwnBuffer(len);
+        }
     }
+}
+
+void Buffer::makeOwnBuffer(size_t additionalSpace) {
+    size_t readable = readableBytes();
+    size_t needed = readable + additionalSpace;
+    size_t capacity = kPrependSize + needed;
+
+    auto buf = new char[capacity];
+    auto refCount = new std::atomic<int>(1);
+
+    memcpy(buf + kPrependSize, m_buffer + m_readIndex, readable);
+
+    if (m_refCount->fetch_sub(1, std::memory_order_release) == 1) {
+        std::atomic_thread_fence(std::memory_order_acquire);
+        delete[] m_buffer;
+        delete m_refCount;
+    }
+
+    m_buffer = buf;
+    m_refCount = refCount;
+    m_capacity = capacity;
+    m_readIndex = kPrependSize;
+    m_writeIndex = m_readIndex + readable;
+    m_ownMemory = true;
 }
 
 void Buffer::append(const char *data, size_t len) {
@@ -105,6 +133,24 @@ void Buffer::append(const unsigned char *data, size_t len) {
 
 void Buffer::append(const void *data, size_t len) {
     append(static_cast<const char *>(data), len);
+}
+
+BufferPtr Buffer::slice(size_t offset, size_t length) {
+    if (offset >readableBytes() || offset + length > readableBytes()) {
+        return nullptr;
+    }
+
+    return std::make_shared<Buffer>(m_buffer, m_capacity, m_readIndex + offset, m_readIndex + offset + length, m_refCount);
+}
+
+BufferPtr Buffer::slicePacket(size_t length) {
+    if (length > readableBytes()) {
+        return nullptr;
+    }
+
+    BufferPtr buf = std::make_shared<Buffer>(m_buffer, m_capacity, m_readIndex, m_readIndex + length, m_refCount);
+    m_readIndex += length;
+    return buf;
 }
 
 void Buffer::appendU16LE(uint16_t u16) {
@@ -213,22 +259,33 @@ uint8_t Buffer::peekU8(int offset) const {
 }
 
 uint16_t Buffer::peekU16LE(int offset) const {
-    const char *start = peek() + offset;
+    const char *start = peek(offset);
     const uint16_t num = *reinterpret_cast<const uint16_t *>(start);
     return num;
 }
 
+uint16_t Buffer::peekU16BE(int offset) const {
+    const uint8_t* p = reinterpret_cast<const uint8_t*>(peek(offset));
+    return static_cast<uint16_t>((p[0] << 8) | p[1]);
+}
+
 uint32_t Buffer::peekU32LE(int offset) const {
-    const char *start = peek() + offset;
+    const char *start = peek(offset);
     const uint32_t num = *reinterpret_cast<const uint32_t *>(start);
     return num;
 }
 
+uint32_t Buffer::peekU32BE(int offset) const {
+    const uint8_t* p = reinterpret_cast<const uint8_t*>(peek(offset));
+    return (p[0] << 24) | (p[1] << 16) | (p[2] << 8) | p[3];
+}
+
 BufferPtr Buffer::readBuffer(int len) {
-    BufferPtr buffer = std::make_shared<Buffer>(len);
-    buffer->append(peek(), len);
-    skip(len);
-    return buffer;
+    if (len <= 0 || static_cast<size_t>(len) > readableBytes()) {
+        return nullptr;
+    }
+
+    return slicePacket(len);
 }
 
 size_t Buffer::writeFd(int fd) {

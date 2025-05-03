@@ -7,5 +7,5 @@ public:
     Decoder() = default;
     virtual ~Decoder() = default;
 
-    virtual Buffer decode(Buffer *buffer) = 0;
+    virtual BufferPtr decode(Buffer *buffer) = 0;
 };
