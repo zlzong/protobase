@@ -197,7 +197,7 @@ void EventLoop::handleTimerEvent(int tfd, TimerTask &task, Channel *channel, boo
 int EventLoop::runAt(Timestamp time, const TimerTask &task) {
     int64_t now = Timestamp::now().microSecondsSinceEpoch();
     int64_t t = time.microSecondsSinceEpoch();
-    return runAfter(t-now,task);
+    return runAfter((t - now) / 1000, task);
 }
 
 int EventLoop::runAfter(int delayMs, const TimerTask &task) {
