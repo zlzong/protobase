@@ -168,7 +168,7 @@ public:
 
     const char *beginWrite() const;
 
-    size_t readFd(int fd);
+    ssize_t readFd(int fd);
 
     char readChar();
 

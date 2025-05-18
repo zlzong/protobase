@@ -141,7 +141,7 @@ void Connection::setState(ConnectionState state) {
 }
 
 void Connection::onRead(Timestamp receiveTime) {
-    size_t nRead = m_inputBuffer.readFd(fd());
+    ssize_t nRead = m_inputBuffer.readFd(fd());
     if (nRead > 0) {
         if (m_messageCallback) {
             m_messageCallback(std::static_pointer_cast<Connection>(shared_from_this()), &m_inputBuffer, receiveTime);
@@ -150,7 +150,7 @@ void Connection::onRead(Timestamp receiveTime) {
         LOG_WARN("connection reset by peer");
         onClose();
     } else {
-        LOG_ERROR("read buffer from fd error:{}", errno);
+        LOG_ERROR("read buffer from fd err:{}", std::strerror(errno));
         onError("read buffer from fd");
     }
 }
@@ -200,7 +200,11 @@ void Connection::onError(const std::string &errMsg) {
     disableAll();
     ConnectionPtr connectionPtr(std::static_pointer_cast<Connection>(shared_from_this()));
 //    m_connectionCallback(connectionPtr);
-    m_closeCallback(connectionPtr);
+
+    // todo 评估要不要添加error call back
+    if (m_closeCallback) {
+        m_closeCallback(connectionPtr);
+    }
 
     setState(kDisconnected);
 }

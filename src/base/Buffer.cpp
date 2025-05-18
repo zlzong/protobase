@@ -193,7 +193,7 @@ const char *Buffer::beginWrite() const {
     return begin() + m_writeIndex;
 }
 
-size_t Buffer::readFd(int fd) {
+ssize_t Buffer::readFd(int fd) {
     char extraBuf[65536];
 
     struct iovec vec[2];
@@ -209,7 +209,7 @@ size_t Buffer::readFd(int fd) {
     const int iovcnt = (writeable < sizeof extraBuf) ? 2 : 1;
     const ssize_t nRead = readv(fd, vec, iovcnt);
     if (nRead < 0) {
-        LOG_ERROR("read from fd: {} error, errno:{}", fd, errno);
+        LOG_ERROR("read from fd: {} error, err:{}", fd, std::strerror(errno));
     } else if (nRead <= writeable) {
         m_writeIndex += nRead;
     } else {

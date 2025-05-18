@@ -89,6 +89,6 @@ void EpollPoller::update(int operation, Channel *channel) {
     epollEvent.data.ptr = channel;
 
     if (epoll_ctl(m_epollFd, operation, fd, &epollEvent) < 0) {
-        LOG_ERROR("epoll ctr error,operation:{},errno:{}", operation, errno);
+        LOG_ERROR("epoll ctr error,operation:{},errno:{}, description: {}", operation, errno, std::strerror(errno));
     }
 }
