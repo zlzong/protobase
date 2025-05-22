@@ -5,6 +5,7 @@
 class Decoder {
 public:
     Decoder() = default;
+
     virtual ~Decoder() = default;
 
     virtual BufferPtr decode(Buffer *buffer) = 0;
