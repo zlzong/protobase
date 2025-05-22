@@ -9,5 +9,4 @@ public:
     virtual ~Decoder() = default;
 
     virtual BufferPtr decode(Buffer *buffer) = 0;
-
 };
