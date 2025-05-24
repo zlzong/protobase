@@ -200,13 +200,12 @@ void Connection::onError(const std::string &errMsg) {
     disableAll();
     ConnectionPtr connectionPtr(std::static_pointer_cast<Connection>(shared_from_this()));
 //    m_connectionCallback(connectionPtr);
+    setState(kDisconnected);
 
     // todo 评估要不要添加error call back
     if (m_closeCallback) {
         m_closeCallback(connectionPtr);
     }
-
-    setState(kDisconnected);
 }
 
 void Connection::sendInLoop(const void *message, size_t len) {
